@@ -1,0 +1,47 @@
+
+% PID CONTROLLER IMPLEMENTATION AND TUNING - SIMULATION
+% -------------------------------------------------------------------------
+% Objective : Design a PID controller for a process, tune Kp, Ki, Kd
+% and analyse rise time, peak overshoot and settling time.
+%
+% Plant : Second order process (representative of a temperature /
+% speed control loop)
+%             1
+% G(s) = --------------
+%        s^2 + 10 s + 20
+%
+% Run in MATLAB with the Control System Toolbox.
+
+%% ------------------------------------------------------------------------
+clc;
+clear;
+close all;
+
+%% 1. Define the plant (process) transfer function
+num = 1;
+den = [1 10 20];
+G = tf(num, den);
+
+fprintf('--------------------------------------------------\n');
+fprintf(' Plant transfer function G(s):\n');
+G
+
+%% 2. Open loop step response (uncontrolled process)
+figure('Name', 'Open Loop Response');
+step(G);
+title('Open Loop Step Response of the Process');
+grid on;
+
+%% 3. PID controller design
+% C(s) = Kp + Ki/s + Kd*s
+% Three cases are compared: P, PI and PID so that the effect of each
+% term on the closed loop response can be observed.
+
+Kp1 = 100; Ki1 = 0;  Kd1 = 0;  % P only
+Kp2 = 100; Ki2 = 50; Kd2 = 0;  % PI
+Kp3 = 100; Ki3 = 50; Kd3 = 15; % PID (tuned)
+
+C1 = pid(Kp1, Ki1, Kd1);
+C2 = pid(Kp2, Ki2, Kd2);
+C3 = pid(Kp3, Ki3, Kd3);
+
