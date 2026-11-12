@@ -1,0 +1,92 @@
+% =========================================================================
+% Dynamic Response Analysis of Mass-Spring-Damper System
+% =========================================================================
+
+clear;
+clc;
+close all;
+
+% Fixed Mass and Stiffness
+m = 1.0;        % Mass (kg)
+k = 100.0;      % Stiffness (N/m)
+
+% Critical Damping Constant
+c_crit = 2*sqrt(m*k);
+
+% Damping Values
+c_undamped    = 0;
+c_underdamped = 0.4*c_crit;
+c_critical    = c_crit;
+c_overdamped  = 2.5*c_crit;
+
+% Transfer Functions
+G_undamped    = tf(1, [m c_undamped k]);
+G_underdamped = tf(1, [m c_underdamped k]);
+G_critical    = tf(1, [m c_critical k]);
+G_overdamped  = tf(1, [m c_overdamped k]);
+
+% Time Vector
+t = 0:0.001:3;
+
+% Plot Responses
+figure('Color', 'w');
+step(G_undamped, t, 'r--');
+hold on;
+step(G_underdamped, t, 'b');
+step(G_critical, t, 'g');
+step(G_overdamped, t, 'k');
+
+grid on;
+title('Displacement Response x(t) for Varying Damping Coefficients');
+xlabel('Time (s)');
+ylabel('Displacement (m)');
+legend('Undamped (\zeta=0)', ...
+       'Underdamped (\zeta=0.4)', ...
+       'Critical (\zeta=1)', ...
+       'Overdamped (\zeta=2.5)', ...
+       'Location', 'best');
+
+% Performance Metrics
+info = stepinfo(G_underdamped);
+disp('--- Underdamped Case Metrics ---');
+disp(info);
+
+% Analytical Calculations
+wn = sqrt(k/m);
+zeta = c_underdamped/(2*sqrt(m*k));
+wd = wn*sqrt(1-zeta^2);
+phi = atan(sqrt(1-zeta^2)/zeta);
+
+tr = (pi-phi)/wd;
+tp = pi/wd;
+Mp = exp(-(pi*zeta)/sqrt(1-zeta^2))*100;
+ts = 4/(zeta*wn);
+
+fprintf('\n----------- UNDERDAMPED CASE PERFORMANCE PARAMETERS -----------\n');
+fprintf('Parameter                  Analytical       Simulated\n');
+fprintf('---------------------------------------------------------------\n');
+fprintf('Rise Time (tr)          : %6.3f s        %6.3f s\n', tr, info.RiseTime);
+fprintf('Peak Time (tp)          : %6.3f s        %6.3f s\n', tp, info.PeakTime);
+fprintf('Overshoot (%%Mp)         : %6.2f %%         %6.2f %%%%\n', Mp, info.Overshoot);
+fprintf('Settling Time (ts)      : %6.3f s        %6.3f s\n', ts, info.SettlingTime);
+fprintf('---------------------------------------------------------------\n');
+
+% ------------------- CRITICAL DAMPING -------------------
+info_critical = stepinfo(G_critical);
+fprintf('\n----------- CRITICALLY DAMPED CASE -----------\n');
+fprintf('Rise Time        : %6.3f s\n', info_critical.RiseTime);
+fprintf('Peak Time        : %6.3f s\n', info_critical.PeakTime);
+fprintf('Overshoot        : %6.2f %%%%\n', info_critical.Overshoot);
+fprintf('Settling Time    : %6.3f s\n', info_critical.SettlingTime);
+fprintf('Steady State     : %6.5f m\n', dcgain(G_critical));
+fprintf('----------------------------------------------\n');
+
+% ------------------- OVERDAMPED -------------------
+info_overdamped = stepinfo(G_overdamped);
+fprintf('\n----------- OVERDAMPED CASE -----------\n');
+fprintf('Rise Time        : %6.3f s\n', info_overdamped.RiseTime);
+fprintf('Peak Time        : %6.3f s\n', info_overdamped.PeakTime);
+fprintf('Overshoot        : %6.2f %%%%\n', info_overdamped.Overshoot);
+fprintf('Settling Time    : %6.3f s\n', info_overdamped.SettlingTime);
+fprintf('Steady State     : %6.5f m\n', dcgain(G_overdamped));
+fprintf('---------------------------------------\n');
